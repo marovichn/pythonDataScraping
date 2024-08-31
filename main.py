@@ -1,16 +1,27 @@
-# This is a sample Python script.
+import requests
+from bs4 import BeautifulSoup
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+res = requests.get('https://news.ycombinator.com/news')
+soup = BeautifulSoup(res.text, 'html.parser')
+links = soup.select('.titleline>a')
+scores = soup.select('.score')
+hrefs = []
+texts = []
 
+for link in links:
+    hrefs.append(f'{link.get_text()} : {link.get('href')}')
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+for score in scores:
+    texts.append(score.get_text())
 
+res = {}
+for key in hrefs:
+    for text in texts:
+        res[key] = text
+        texts.remove(text)
+        break
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+filtered_res = {k: v for k, v in res.items() if int(v.split()[0]) >= 50}
+sorted_res = dict(sorted(filtered_res.items(), key=lambda item: int(item[1].split()[0]), reverse=True))
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+print(sorted_res)
